@@ -36,6 +36,7 @@ yarn-error.log*
 # local app data
 /dev.db
 /public/uploads/
+/ggilabs-content-pipeline/
 
 # vercel
 .vercel
