@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Article {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status    String   @default("uploaded")
+  version   Int      @default(1)
+  batchName String?
+
+  publishedAt  DateTime?
+  publishedUrl String?
+  wpPostId     String?
+  wpFeaturedMediaId String?
+
+  featuredImagePath     String?
+  featuredImageFilename String?
+
+  postTitle        String
+  postName         String
+  postStatus       String  @default("draft")
+  postType         String  @default("education")
+  templateType     String  @default("spoke")
+  primaryKeyword   String
+  serviceName      String?
+  locationName     String?
+  heroEyebrow      String?
+  heroHeading      String
+  heroSubheading   String
+  introSummary     String
+  section1Heading  String
+  section1Body     String
+  section2Heading  String
+  section2Body     String
+  section3Heading  String
+  section3Body     String
+  faq1Question     String
+  faq1Answer       String
+  faq2Question     String
+  faq2Answer       String
+  faq3Question     String
+  faq3Answer       String
+  ctaHeading       String
+  ctaBody          String
+  ctaButtonText    String
+  ctaButtonUrl     String
+  relatedHubUrl    String
+  relatedHubAnchor String
+  metaTitle        String
+  metaDescription  String
+
+  autoNoEmDashes           Boolean?
+  autoExternalLinksPresent Boolean?
+  autoTablePresent         Boolean?
+  autoMetaLength           Boolean?
+  autoKeywordInTitle       Boolean?
+  autoNoMarkdownLinks      Boolean?
+
+  checkOpinionInS1         Boolean?
+  checkRealExampleSpecific Boolean?
+  checkAllStatsLinked      Boolean?
+  checkExternalLinksCorrect Boolean?
+  checkMetaCapsCorrect     Boolean?
+  checkCtaSpecific         Boolean?
+  checkParagraphLength     Boolean?
+  checkTableRendersCorrect Boolean?
+  checkNoForcedHumor       Boolean?
+  checkVoiceContractorAware Boolean?
+
+  overallScore Int?
+  reviewNotes  String?
+
+  gscClicks30d       Int?
+  gscImpressions30d  Int?
+  rankingPosition    Float?
+  performanceUpdatedAt DateTime?
+}
+
+model Batch {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  filename    String
+  articleCount Int
+  source      String   @default("csv_upload")
+}

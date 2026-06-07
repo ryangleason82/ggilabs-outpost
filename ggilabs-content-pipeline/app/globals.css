@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease;
+}
+
+.article-body {
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+.article-body p {
+  margin: 0 0 1rem;
+}
+
+.article-body ul {
+  list-style: disc;
+  margin: 0 0 1rem 1.5rem;
+  padding-left: 1rem;
+}
+
+.article-body ol {
+  list-style: decimal;
+  margin: 0 0 1rem 1.5rem;
+  padding-left: 1rem;
+}
+
+.article-body li {
+  margin: 0.35rem 0;
+  padding-left: 0.25rem;
+}
+
+.article-body a {
+  color: #0f766e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article-body table {
+  margin: 1.25rem 0;
+  width: 100%;
+}
