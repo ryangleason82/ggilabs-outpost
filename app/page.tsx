@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { StatusBadge } from "@/components/StatusBadge";
+import { getSelectedClient, selectedClientWhere } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
 
 const statuses = ["uploaded", "reviewed", "approved", "published", "flagged"];
@@ -17,12 +18,18 @@ type RecentArticle = {
 };
 
 export default async function DashboardPage() {
+  const [selectedClient, clientWhere] = await Promise.all([
+    getSelectedClient(),
+    selectedClientWhere(),
+  ]);
   const [counts, recent]: [StatusCount[], RecentArticle[]] = await Promise.all([
     prisma.article.groupBy({
       by: ["status"],
+      where: clientWhere,
       _count: { status: true },
     }),
     prisma.article.findMany({
+      where: clientWhere,
       orderBy: { createdAt: "desc" },
       take: 5,
       select: {
@@ -44,7 +51,9 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-2xl font-semibold">Dashboard</h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Review uploaded CSV articles and move approved content toward publishing.
+            {selectedClient
+              ? `Managing ${selectedClient.name} articles and WordPress drafts.`
+              : "Add a client before uploading and publishing articles."}
           </p>
         </div>
         <Link

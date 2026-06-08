@@ -1,11 +1,11 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { Article } from "@prisma/client";
+import type { Article, Client } from "@prisma/client";
 
-const WP_URL = process.env.WP_URL?.replace(/\/$/, "");
-const WP_USERNAME = process.env.WP_USERNAME;
-const WP_APP_PASSWORD = process.env.WP_APP_PASSWORD;
-const WP_RESOURCE_REST_BASE = process.env.WP_RESOURCE_REST_BASE ?? "resources";
+type WordPressClientConfig = Pick<
+  Client,
+  "name" | "wpUrl" | "wpUsername" | "wpAppPassword" | "wpResourceRestBase"
+>;
 
 type WordPressType = {
   name?: string;
@@ -13,42 +13,60 @@ type WordPressType = {
   rest_base?: string;
 };
 
-function requireWordPressConfig() {
-  if (!WP_URL || !WP_USERNAME || !WP_APP_PASSWORD) {
+export type WordPressResourceSummary = {
+  id: number;
+  date?: string;
+  date_gmt?: string;
+  modified?: string;
+  slug?: string;
+  status?: string;
+  link?: string;
+  title?: { rendered?: string };
+  featured_media?: number;
+  meta?: Record<string, unknown>;
+  acf?: Record<string, unknown>;
+};
+
+function requireWordPressConfig(client: WordPressClientConfig) {
+  if (!client.wpUrl || !client.wpUsername || !client.wpAppPassword) {
     throw new Error(
-      "WordPress config is missing. Set WP_URL, WP_USERNAME, and WP_APP_PASSWORD in .env.local.",
+      `WordPress config is missing for ${client.name}. Set its URL, username, and application password in Clients.`,
     );
   }
 }
 
-function authHeader() {
-  requireWordPressConfig();
-  return `Basic ${Buffer.from(`${WP_USERNAME}:${WP_APP_PASSWORD}`).toString("base64")}`;
+function authHeader(client: WordPressClientConfig) {
+  requireWordPressConfig(client);
+  return `Basic ${Buffer.from(`${client.wpUsername}:${client.wpAppPassword}`).toString("base64")}`;
 }
 
-function wpApiEndpoint(path: string) {
-  requireWordPressConfig();
-  return `${WP_URL}/wp-json/wp/v2/${path.replace(/^\//, "")}`;
+function wpUrl(client: WordPressClientConfig) {
+  return client.wpUrl.replace(/\/$/, "");
 }
 
-function wpJsonEndpoint(path: string) {
-  requireWordPressConfig();
-  return `${WP_URL}/wp-json/${path.replace(/^\//, "")}`;
+function wpApiEndpoint(client: WordPressClientConfig, path: string) {
+  requireWordPressConfig(client);
+  return `${wpUrl(client)}/wp-json/wp/v2/${path.replace(/^\//, "")}`;
 }
 
-function resourceEndpoint(restBase: string, path = "") {
-  return wpApiEndpoint(`${restBase}${path}`);
+function wpJsonEndpoint(client: WordPressClientConfig, path: string) {
+  requireWordPressConfig(client);
+  return `${wpUrl(client)}/wp-json/${path.replace(/^\//, "")}`;
+}
+
+function resourceEndpoint(client: WordPressClientConfig, restBase: string, path = "") {
+  return wpApiEndpoint(client, `${restBase}${path}`);
 }
 
 function normalizeTypeName(value: string | undefined) {
   return (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-async function resolveResourceRestBase() {
-  const configuredBase = WP_RESOURCE_REST_BASE.replace(/^\/|\/$/g, "");
-  const res = await fetch(wpApiEndpoint("types"), {
+async function resolveResourceRestBase(client: WordPressClientConfig) {
+  const configuredBase = client.wpResourceRestBase.replace(/^\/|\/$/g, "");
+  const res = await fetch(wpApiEndpoint(client, "types"), {
     headers: {
-      Authorization: authHeader(),
+      Authorization: authHeader(client),
     },
   });
 
@@ -173,7 +191,7 @@ function mimeTypeForImage(filePath: string) {
   return "application/octet-stream";
 }
 
-async function uploadFeaturedImage(article: Article) {
+async function uploadFeaturedImage(article: Article, client: WordPressClientConfig) {
   if (!article.featuredImagePath) {
     return null;
   }
@@ -187,10 +205,10 @@ async function uploadFeaturedImage(article: Article) {
   const filename =
     article.featuredImageFilename ?? path.basename(article.featuredImagePath);
 
-  const res = await fetch(wpApiEndpoint("media"), {
+  const res = await fetch(wpApiEndpoint(client, "media"), {
     method: "POST",
     headers: {
-      Authorization: authHeader(),
+      Authorization: authHeader(client),
       "Content-Type": mimeTypeForImage(localPath),
       "Content-Disposition": `attachment; filename="${filename.replace(/"/g, "")}"`,
     },
@@ -212,11 +230,15 @@ async function uploadFeaturedImage(article: Article) {
   return mediaId;
 }
 
-async function updateRankMathMeta(postId: number, article: Article) {
-  const res = await fetch(wpJsonEndpoint("rankmath/v1/updateMeta"), {
+async function updateRankMathMeta(
+  postId: number,
+  article: Article,
+  client: WordPressClientConfig,
+) {
+  const res = await fetch(wpJsonEndpoint(client, "rankmath/v1/updateMeta"), {
     method: "POST",
     headers: {
-      Authorization: authHeader(),
+      Authorization: authHeader(client),
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -233,18 +255,21 @@ async function updateRankMathMeta(postId: number, article: Article) {
   }
 }
 
-export async function pushResourceDraftToWordPress(article: Article): Promise<{
+export async function pushResourceDraftToWordPress(
+  article: Article,
+  client: WordPressClientConfig,
+): Promise<{
   postId: number;
   previewUrl: string;
   publishedUrl: string | null;
   featuredMediaId: number | null;
 }> {
-  const resourceRestBase = await resolveResourceRestBase();
-  const featuredMediaId = await uploadFeaturedImage(article);
-  const res = await fetch(resourceEndpoint(resourceRestBase), {
+  const resourceRestBase = await resolveResourceRestBase(client);
+  const featuredMediaId = await uploadFeaturedImage(article, client);
+  const res = await fetch(resourceEndpoint(client, resourceRestBase), {
     method: "POST",
     headers: {
-      Authorization: authHeader(),
+      Authorization: authHeader(client),
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -277,12 +302,50 @@ export async function pushResourceDraftToWordPress(article: Article): Promise<{
     throw new Error("WordPress did not return a valid resource ID.");
   }
 
-  await updateRankMathMeta(postId, article);
+  await updateRankMathMeta(postId, article, client);
 
   return {
     postId,
-    previewUrl: `${WP_URL}/?p=${postId}&preview=true`,
+    previewUrl: `${wpUrl(client)}/?p=${postId}&preview=true`,
     publishedUrl: typeof post.link === "string" ? post.link : null,
     featuredMediaId,
   };
+}
+
+export async function fetchPublishedResourcesFromWordPress(
+  client: WordPressClientConfig,
+) {
+  const resourceRestBase = await resolveResourceRestBase(client);
+  const resources: WordPressResourceSummary[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  do {
+    const params = new URLSearchParams({
+      per_page: "100",
+      page: String(page),
+      status: "publish",
+      orderby: "date",
+      order: "desc",
+    });
+    const res = await fetch(resourceEndpoint(client, resourceRestBase, `?${params}`), {
+      headers: {
+        Authorization: authHeader(client),
+      },
+    });
+    const text = await res.text();
+    const pageResources = text ? (JSON.parse(text) as WordPressResourceSummary[]) : [];
+
+    if (!res.ok) {
+      throw new Error(
+        `WordPress resources import failed at /wp-json/wp/v2/${resourceRestBase}: ${text}`,
+      );
+    }
+
+    resources.push(...pageResources);
+    totalPages = Number(res.headers.get("x-wp-totalpages") ?? "1");
+    page += 1;
+  } while (page <= totalPages);
+
+  return resources;
 }

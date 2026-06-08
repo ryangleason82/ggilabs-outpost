@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSelectedClientId } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
 import { parseCSV } from "@/lib/parser";
 import { runAutoChecks } from "@/lib/checker";
 
 export async function POST(req: NextRequest) {
+  const clientId = await getSelectedClientId();
+  if (!clientId) {
+    return NextResponse.json(
+      { error: "Create or select a client before uploading articles." },
+      { status: 400 },
+    );
+  }
+
   const formData = await req.formData();
   const file = formData.get("file");
 
@@ -29,6 +38,7 @@ export async function POST(req: NextRequest) {
     data: {
       filename: file.name,
       articleCount: parsed.length,
+      clientId,
     },
   });
 
@@ -38,6 +48,7 @@ export async function POST(req: NextRequest) {
 
       return prisma.article.create({
         data: {
+          clientId,
           batchName: file.name,
           postTitle: article.postTitle,
           postName: article.postName,

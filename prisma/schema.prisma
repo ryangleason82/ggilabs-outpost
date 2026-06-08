@@ -11,6 +11,9 @@ model Article {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id])
+
   status    String   @default("uploaded")
   version   Int      @default(1)
   batchName String?
@@ -80,13 +83,40 @@ model Article {
   gscClicks30d       Int?
   gscImpressions30d  Int?
   rankingPosition    Float?
+  gscIndexedStatus    String?
+  gscCoverageState    String?
+  gscLastCrawlTime    DateTime?
+  gscGoogleCanonical  String?
+  gscUserCanonical    String?
+  gscRobotsTxtState   String?
+  gscIndexingState    String?
+  gscInspectionUpdatedAt DateTime?
   performanceUpdatedAt DateTime?
 }
 
 model Batch {
   id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
+  clientId    String?
   filename    String
   articleCount Int
   source      String   @default("csv_upload")
+}
+
+model Client {
+  id                 String   @id @default(cuid())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  name               String
+  wpUrl              String
+  wpUsername         String
+  wpAppPassword      String
+  wpResourceRestBase String   @default("resources")
+  gscPropertyUrl     String?
+  gscClientId        String?
+  gscClientSecret    String?
+  gscRefreshToken    String?
+  isDefault          Boolean  @default(false)
+
+  articles Article[]
 }

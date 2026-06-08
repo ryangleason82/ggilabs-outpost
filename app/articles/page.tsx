@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DeleteArticleButton } from "@/components/DeleteArticleButton";
 import { StatusBadge } from "@/components/StatusBadge";
+import { getSelectedClient, selectedClientWhere } from "@/lib/clients";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
@@ -18,8 +19,12 @@ export default async function ArticlesPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status } = await searchParams;
+  const [selectedClient, clientWhere] = await Promise.all([
+    getSelectedClient(),
+    selectedClientWhere(),
+  ]);
   const articles: ArticleRow[] = await prisma.article.findMany({
-    where: status ? { status } : undefined,
+    where: { ...clientWhere, ...(status ? { status } : {}) },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -36,7 +41,9 @@ export default async function ArticlesPage({
         <div>
           <h1 className="text-2xl font-semibold">All Articles</h1>
           <p className="mt-1 text-sm text-zinc-600">
-            {status ? `Filtered to ${status} articles.` : "All uploaded content."}
+            {selectedClient
+              ? `${selectedClient.name}${status ? ` - ${status} articles.` : " - all uploaded content."}`
+              : "Add a client before uploading articles."}
           </p>
         </div>
         <Link

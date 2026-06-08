@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GGILabs Content Pipeline",
-  description: "Local CSV review and publishing workflow for GGILabs content.",
+  title: "The Outpost",
+  description: "Local CSV review and WordPress publishing workflow.",
 };
 
 export default function RootLayout({

@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { PublishArticleButton } from "@/components/PublishArticleButton";
 import { StatusBadge } from "@/components/StatusBadge";
+import { getSelectedClient, selectedClientWhere } from "@/lib/clients";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 export default async function QueuePage() {
+  const [selectedClient, clientWhere] = await Promise.all([
+    getSelectedClient(),
+    selectedClientWhere(),
+  ]);
   const articles = await prisma.article.findMany({
-    where: { status: "approved" },
+    where: { ...clientWhere, status: "approved" },
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
@@ -22,7 +27,9 @@ export default async function QueuePage() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">Publishing Queue</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          Approved articles waiting for WordPress publishing.
+          {selectedClient
+            ? `Approved ${selectedClient.name} articles waiting for WordPress publishing.`
+            : "Add a client before publishing articles."}
         </p>
       </div>
 

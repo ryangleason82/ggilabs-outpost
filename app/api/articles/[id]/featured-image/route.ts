@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { selectedClientWhere } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
 
 const allowedTypes = new Map([
@@ -37,7 +38,8 @@ export async function POST(
     );
   }
 
-  const article = await prisma.article.findUnique({ where: { id } });
+  const clientWhere = await selectedClientWhere();
+  const article = await prisma.article.findFirst({ where: { id, ...clientWhere } });
   if (!article) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { selectedClientWhere } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
 import { runAutoChecks } from "@/lib/checker";
 import { CSV_HEADERS } from "@/lib/parser";
@@ -25,7 +26,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const article = await prisma.article.findUnique({ where: { id } });
+  const clientWhere = await selectedClientWhere();
+  const article = await prisma.article.findFirst({ where: { id, ...clientWhere } });
 
   if (!article) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -40,11 +42,12 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const rawUpdates = (await req.json()) as Record<string, unknown>;
+  const clientWhere = await selectedClientWhere();
   const updates = Object.fromEntries(
     Object.entries(rawUpdates).filter(([key]) => editableFields.has(key)),
   );
 
-  const existing = await prisma.article.findUnique({ where: { id } });
+  const existing = await prisma.article.findFirst({ where: { id, ...clientWhere } });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -76,6 +79,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const clientWhere = await selectedClientWhere();
+  const existing = await prisma.article.findFirst({ where: { id, ...clientWhere } });
+
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   try {
     await prisma.article.delete({ where: { id } });
