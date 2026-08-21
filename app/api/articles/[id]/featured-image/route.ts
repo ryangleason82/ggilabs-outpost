@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { selectedClientWhere } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
+import { articleForApi } from "@/lib/content";
 
 const allowedTypes = new Map([
   ["image/jpeg", "jpg"],
@@ -56,10 +57,10 @@ export async function POST(
     where: { id },
     data: {
       featuredImagePath: imagePath,
-      featuredImageFilename: file.name,
+      featuredImageFilename: `${article.postName}.${extension}`,
       wpFeaturedMediaId: null,
     },
   });
 
-  return NextResponse.json({ article: updated });
+  return NextResponse.json({ article: articleForApi(updated) });
 }

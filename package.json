@@ -7,13 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:init": "node scripts/init-db.mjs"
+    "test": "tsx tests/run-tests.ts",
+    "typecheck": "tsc --noEmit --incremental false",
+    "db:init": "node scripts/init-db.mjs",
+    "prompts:seed": "node scripts/seed-prompts.mjs",
+    "clients:export": "node scripts/export-clients.mjs"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "better-sqlite3": "^12.10.0",
     "csv-parse": "^6.2.1",
+    "csv-stringify": "^6.6.0",
     "next": "16.2.7",
     "prisma": "^7.8.0",
     "react": "19.2.4",
@@ -27,6 +32,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
+    "tsx": "^4.23.9",
     "typescript": "^5"
   }
 }

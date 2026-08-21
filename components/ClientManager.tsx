@@ -8,6 +8,8 @@ type ClientRow = {
   wpUrl: string;
   wpUsername: string;
   wpResourceRestBase: string;
+  wpServiceDetailRestBase: string;
+  wpServiceDetailPostType: string;
   gscPropertyUrl: string | null;
   gscClientId: string | null;
   isDefault: boolean;
@@ -23,6 +25,8 @@ type ClientForm = {
   wpUsername: string;
   wpAppPassword: string;
   wpResourceRestBase: string;
+  wpServiceDetailRestBase: string;
+  wpServiceDetailPostType: string;
   gscPropertyUrl: string;
   gscClientId: string;
   gscClientSecret: string;
@@ -36,6 +40,8 @@ const emptyForm: ClientForm = {
   wpUsername: "",
   wpAppPassword: "",
   wpResourceRestBase: "resources",
+  wpServiceDetailRestBase: "service-detail-page",
+  wpServiceDetailPostType: "service-detail-page",
   gscPropertyUrl: "",
   gscClientId: "",
   gscClientSecret: "",
@@ -49,6 +55,7 @@ export function ClientManager() {
   const [form, setForm] = useState<ClientForm>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [targetStatus, setTargetStatus] = useState("");
 
   async function loadClients() {
     const res = await fetch("/api/clients");
@@ -77,6 +84,7 @@ export function ClientManager() {
 
   function editClient(client: ClientRow) {
     setError("");
+    setTargetStatus("");
     setForm({
       id: client.id,
       name: client.name,
@@ -84,6 +92,8 @@ export function ClientManager() {
       wpUsername: client.wpUsername,
       wpAppPassword: "",
       wpResourceRestBase: client.wpResourceRestBase,
+      wpServiceDetailRestBase: client.wpServiceDetailRestBase,
+      wpServiceDetailPostType: client.wpServiceDetailPostType,
       gscPropertyUrl: client.gscPropertyUrl ?? "",
       gscClientId: client.gscClientId ?? "",
       gscClientSecret: "",
@@ -121,6 +131,12 @@ export function ClientManager() {
     await loadClients();
   }
 
+  async function validateTargets() {
+    if (!form.id) return; setSaving(true); setTargetStatus("");
+    const res = await fetch(`/api/clients/${form.id}/wordpress-targets`); const json = await res.json(); setSaving(false);
+    setTargetStatus(res.ok ? `Validated: spoke → ${json.targets.spoke.restBase}; service_detail → ${json.targets.service_detail.restBase}` : json.error || "Target validation failed.");
+  }
+
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
@@ -149,6 +165,7 @@ export function ClientManager() {
                 <p className="mt-1 truncate text-xs text-zinc-500">
                   {client.wpUrl} - {client.wpUsername} - REST base{" "}
                   {client.wpResourceRestBase}
+                  {" "}- Service Detail REST base {client.wpServiceDetailRestBase}
                 </p>
                 <p className="mt-1 truncate text-xs text-zinc-500">
                   GSC: {client.gscPropertyUrl || "Not configured"}
@@ -189,6 +206,14 @@ export function ClientManager() {
               onChange={(event) => setForm({ ...form, name: event.target.value })}
               className="w-full rounded border border-zinc-300 px-3 py-2 text-sm"
             />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold uppercase text-zinc-500">Service Detail REST base</span>
+            <input value={form.wpServiceDetailRestBase} onChange={(event) => setForm({ ...form, wpServiceDetailRestBase: event.target.value })} placeholder="service-detail-page" className="w-full rounded border border-zinc-300 px-3 py-2 text-sm" />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold uppercase text-zinc-500">Service Detail WordPress post type</span>
+            <input value={form.wpServiceDetailPostType} onChange={(event) => setForm({ ...form, wpServiceDetailPostType: event.target.value })} placeholder="service-detail-page" className="w-full rounded border border-zinc-300 px-3 py-2 text-sm" />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-semibold uppercase text-zinc-500">
@@ -314,6 +339,7 @@ export function ClientManager() {
             {error}
           </div>
         )}
+        {targetStatus && <div className={`mt-4 rounded border p-3 text-sm ${targetStatus.startsWith("Validated") ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}>{targetStatus}</div>}
 
         <div className="mt-5 flex gap-2">
           <button
@@ -324,6 +350,9 @@ export function ClientManager() {
           >
             {saving ? "Saving..." : "Save Client"}
           </button>
+          {form.id && (
+            <button type="button" disabled={saving} onClick={() => void validateTargets()} className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-50">Validate WordPress targets</button>
+          )}
           {form.id && (
             <button
               type="button"

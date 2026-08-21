@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSelectedClientId } from "@/lib/clients";
+import { saveClientsConfig } from "@/lib/client-config";
 import { prisma } from "@/lib/prisma";
 
 function cleanText(value: unknown) {
@@ -16,6 +17,8 @@ export async function GET() {
         wpUrl: true,
         wpUsername: true,
         wpResourceRestBase: true,
+        wpServiceDetailRestBase: true,
+        wpServiceDetailPostType: true,
         gscPropertyUrl: true,
         gscClientId: true,
         gscClientSecret: true,
@@ -46,6 +49,8 @@ export async function POST(req: NextRequest) {
   const wpUsername = cleanText(body.wpUsername);
   const wpAppPassword = cleanText(body.wpAppPassword);
   const wpResourceRestBase = cleanText(body.wpResourceRestBase) || "resources";
+  const wpServiceDetailRestBase = cleanText(body.wpServiceDetailRestBase) || "service-detail-page";
+  const wpServiceDetailPostType = cleanText(body.wpServiceDetailPostType) || "service-detail-page";
   const gscPropertyUrl = cleanText(body.gscPropertyUrl) || null;
   const gscClientId = cleanText(body.gscClientId) || null;
   const gscClientSecret = cleanText(body.gscClientSecret) || null;
@@ -70,6 +75,8 @@ export async function POST(req: NextRequest) {
       wpUsername,
       wpAppPassword,
       wpResourceRestBase,
+      wpServiceDetailRestBase,
+      wpServiceDetailPostType,
       gscPropertyUrl,
       gscClientId,
       gscClientSecret,
@@ -82,11 +89,14 @@ export async function POST(req: NextRequest) {
       wpUrl: true,
       wpUsername: true,
       wpResourceRestBase: true,
+      wpServiceDetailRestBase: true,
+      wpServiceDetailPostType: true,
       gscPropertyUrl: true,
       gscClientId: true,
       isDefault: true,
     },
   });
 
+  await saveClientsConfig();
   return NextResponse.json({ client }, { status: 201 });
 }

@@ -6,7 +6,7 @@ export const SELECTED_CLIENT_COOKIE = "outpost_client_id";
 
 export type ClientSummary = Pick<
   Client,
-  "id" | "name" | "wpUrl" | "wpUsername" | "wpResourceRestBase" | "isDefault"
+  "id" | "name" | "wpUrl" | "wpUsername" | "wpResourceRestBase" | "wpServiceDetailRestBase" | "wpServiceDetailPostType" | "isDefault"
 >;
 
 export async function getClients(): Promise<ClientSummary[]> {
@@ -18,6 +18,8 @@ export async function getClients(): Promise<ClientSummary[]> {
       wpUrl: true,
       wpUsername: true,
       wpResourceRestBase: true,
+      wpServiceDetailRestBase: true,
+      wpServiceDetailPostType: true,
       isDefault: true,
     },
   });

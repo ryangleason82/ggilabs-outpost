@@ -8,11 +8,15 @@ import { DeleteArticleButton } from "@/components/DeleteArticleButton";
 import { FeaturedImageUpload } from "@/components/FeaturedImageUpload";
 import {
   MANUAL_CHECKS,
+  SERVICE_DETAIL_MANUAL_CHECKS,
   ManualChecklist,
   manualChecksComplete,
 } from "@/components/ManualChecklist";
 import { StatusBadge } from "@/components/StatusBadge";
+import { TechnicalSeoPanel } from "@/components/TechnicalSeoPanel";
 import { CSV_HEADERS } from "@/lib/parser";
+import { SERVICE_DETAIL_EDIT_GROUPS, SERVICE_DETAIL_FIELDS, SERVICE_DETAIL_HTML_EDIT_GROUPS, SERVICE_DETAIL_HTML_FIELDS } from "@/lib/templates";
+import { expectedServicePath, SERVICE_HUB_OPTIONS } from "@/lib/service-hubs";
 
 const longTextFields = new Set([
   "heroSubheading",
@@ -25,6 +29,8 @@ const longTextFields = new Set([
   "faq3Answer",
   "ctaBody",
   "metaDescription",
+  ...SERVICE_DETAIL_HTML_FIELDS,
+  "html_content",
 ]);
 
 const editGroups = [
@@ -90,6 +96,12 @@ export default function ArticleReviewPage({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const isServiceDetail = article?.templateType === "service_detail" || article?.template_type === "service_detail";
+  const isHtmlServiceDetail = isServiceDetail && (article?.content_format === "html" || Boolean(String(article?.html_content ?? "").trim()));
+  const activeFields = isHtmlServiceDetail ? SERVICE_DETAIL_HTML_EDIT_GROUPS.flatMap((group) => group.fields) : isServiceDetail ? SERVICE_DETAIL_FIELDS : CSV_HEADERS;
+  const activeGroups = isHtmlServiceDetail ? SERVICE_DETAIL_HTML_EDIT_GROUPS : isServiceDetail ? SERVICE_DETAIL_EDIT_GROUPS : editGroups;
+  const expectedPath = isServiceDetail ? expectedServicePath(editFields.service_hub ?? "", editFields.post_name ?? "") : "";
+
   useEffect(() => {
     fetch(`/api/articles/${id}`)
       .then((res) => res.json())
@@ -97,7 +109,8 @@ export default function ArticleReviewPage({
         setArticle(json.article);
         setEditFields(
           Object.fromEntries(
-            CSV_HEADERS.map((field) => [field, String(json.article[field] ?? "")]),
+            (json.article.templateType === "service_detail" && (json.article.content_format === "html" || json.article.html_content) ? SERVICE_DETAIL_HTML_EDIT_GROUPS.flatMap((group) => group.fields) : json.article.templateType === "service_detail" ? SERVICE_DETAIL_FIELDS : CSV_HEADERS)
+              .map((field) => [field, String(json.article[field] ?? "")]),
           ),
         );
       })
@@ -105,8 +118,8 @@ export default function ArticleReviewPage({
   }, [id]);
 
   const canApprove = useMemo(
-    () => (article ? manualChecksComplete(article) : false),
-    [article],
+    () => (article ? manualChecksComplete(article) && (!isHtmlServiceDetail || !((article.technicalSeo as { errors?: unknown[] } | undefined)?.errors?.length)) : false),
+    [article, isHtmlServiceDetail],
   );
 
   async function saveUpdates(updates: Record<string, unknown>) {
@@ -128,7 +141,7 @@ export default function ArticleReviewPage({
     setArticle(json.article);
     setEditFields(
       Object.fromEntries(
-        CSV_HEADERS.map((field) => [field, String(json.article[field] ?? "")]),
+        activeFields.map((field) => [field, String(json.article[field] ?? "")]),
       ),
     );
   }
@@ -167,7 +180,7 @@ export default function ArticleReviewPage({
 
         {editing ? (
           <div className="mx-auto max-w-4xl space-y-8">
-            {editGroups.map((group) => (
+            {activeGroups.map((group) => (
               <section key={group.title}>
                 <h2 className="mb-3 text-sm font-semibold uppercase text-zinc-500">
                   {group.title}
@@ -179,9 +192,16 @@ export default function ArticleReviewPage({
                       className={longTextFields.has(field) ? "block md:col-span-2" : "block"}
                     >
                       <span className="mb-1 block text-xs font-semibold uppercase text-zinc-500">
-                        {field}
+                        {field.replaceAll("_", " ")}
                       </span>
-                      {longTextFields.has(field) ? (
+                      {field === "service_hub" ? (
+                        <>
+                          <input list="service-hub-options" value={editFields[field] ?? ""} placeholder="vehicles" onChange={(event) => setEditFields({ ...editFields, [field]: event.target.value.toLowerCase().trim() })} className="w-full rounded border border-zinc-300 px-3 py-2 text-sm" />
+                          <datalist id="service-hub-options">
+                            {SERVICE_HUB_OPTIONS.map((hub) => <option key={hub.slug} value={hub.slug}>{hub.label}</option>)}
+                          </datalist>
+                        </>
+                      ) : longTextFields.has(field) ? (
                         <textarea
                           value={editFields[field] ?? ""}
                           onChange={(event) =>
@@ -208,6 +228,7 @@ export default function ArticleReviewPage({
                     </label>
                   ))}
                 </div>
+                {(group.fields as readonly string[]).includes("service_hub") && <div className="mt-3 rounded border border-zinc-200 bg-zinc-50 p-3 text-sm"><span className="font-medium">Expected path: </span><code>{expectedPath || "Select a hub and enter a slug"}</code>{article.publishedUrl ? <p className="mt-1 text-xs text-zinc-500">WordPress URL: {String(article.publishedUrl)}</p> : <p className="mt-1 text-xs text-zinc-500">WordPress remains the canonical URL source after publishing.</p>}</div>}
               </section>
             ))}
             <div className="sticky bottom-0 border-t border-zinc-200 bg-white py-4">
@@ -219,6 +240,7 @@ export default function ArticleReviewPage({
               >
                 {saving ? "Saving..." : "Save Edits"}
               </button>
+              <button type="button" onClick={() => { setEditing(false); setEditFields(Object.fromEntries(activeFields.map((field) => [field, String(article[field] ?? "")]))); }} className="ml-2 rounded border border-zinc-300 px-4 py-2 text-sm font-medium">Cancel</button>
             </div>
           </div>
         ) : (
@@ -240,13 +262,15 @@ export default function ArticleReviewPage({
                 ? article.featuredImageFilename
                 : null
             }
-            onUploaded={(updatedArticle) => setArticle(updatedArticle)}
+            onUploaded={(updatedArticle) => setArticle((current) => current ? { ...current, ...updatedArticle } : updatedArticle)}
           />
         </div>
 
         <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-4">
           <AutoCheckResults article={article} />
         </div>
+
+        {isHtmlServiceDetail && <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-4"><TechnicalSeoPanel result={article.technicalSeo as { errors?: { id: string; message: string }[]; warnings?: { id: string; message: string }[]; passes?: { id: string; message: string }[] } | undefined} /></div>}
 
         <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-4">
           <ManualChecklist
@@ -295,7 +319,11 @@ export default function ArticleReviewPage({
 
         {!canApprove && (
           <p className="mt-3 text-xs text-zinc-500">
-            Approval unlocks after all {MANUAL_CHECKS.length} manual checks are saved.
+            {!manualChecksComplete(article)
+              ? `Approval unlocks after all ${isServiceDetail ? SERVICE_DETAIL_MANUAL_CHECKS.length : MANUAL_CHECKS.length} manual checks are saved.`
+              : isHtmlServiceDetail && ((article.technicalSeo as { errors?: unknown[] } | undefined)?.errors?.length)
+                ? "Approval is blocked by the technical SEO errors shown above."
+                : "Save the article review before approving."}
           </p>
         )}
       </aside>

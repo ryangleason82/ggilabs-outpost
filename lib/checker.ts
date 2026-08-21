@@ -19,9 +19,12 @@ export const AUTO_CHECK_KEYS = [
 export function runAutoChecks(article: Record<string, string>): AutoCheckResult {
   const allText = Object.values(article).join(" ");
   const bodyFields = [
-    article.section1Body,
-    article.section2Body,
-    article.section3Body,
+    article.section1Body, article.section2Body, article.section3Body,
+    article.intro_body, article.signs_intro, article.signs_list,
+    article.service_overview_body, article.process_intro, article.process_steps,
+    article.decision_body, article.decision_table, article.trust_body,
+    article.local_body,
+    article.html_content,
   ].join(" ");
 
   return {
@@ -34,9 +37,9 @@ export function runAutoChecks(article: Record<string, string>): AutoCheckResult 
     autoMetaLength:
       (article.metaTitle ?? "").length <= 60 &&
       (article.metaDescription ?? "").length <= 160,
-    autoKeywordInTitle: (article.postTitle ?? "")
+    autoKeywordInTitle: (article.postTitle ?? article.post_title ?? "")
       .toLowerCase()
-      .includes((article.primaryKeyword ?? "").toLowerCase()),
+      .includes((article.primaryKeyword ?? article.primary_keyword ?? "").toLowerCase()),
     autoNoMarkdownLinks: !/\[[^\]]+\]\(https?:\/\//i.test(bodyFields),
   };
 }

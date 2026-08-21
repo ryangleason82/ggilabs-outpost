@@ -15,8 +15,27 @@ export const MANUAL_CHECKS = [
   { key: "checkVoiceContractorAware", label: "Voice sounds contractor-aware, not agency generic" },
 ] as const;
 
+export const SERVICE_DETAIL_MANUAL_CHECKS = [
+  { key: "checkOpinionInS1", label: "Introduction clearly explains the service and intended audience" },
+  { key: "checkRealExampleSpecific", label: "Claims and examples are specific and supportable" },
+  { key: "checkAllStatsLinked", label: "Statistics link to specific source pages" },
+  { key: "checkExternalLinksCorrect", label: "External links use appropriate target and rel attributes" },
+  { key: "checkMetaCapsCorrect", label: "SEO title and description are accurate and correctly capitalized" },
+  { key: "checkCtaSpecific", label: "Calls to action match this service" },
+  { key: "checkParagraphLength", label: "Content is readable and appropriately structured" },
+  { key: "checkTableRendersCorrect", label: "Lists and optional decision table render correctly" },
+  { key: "checkNoForcedHumor", label: "Tone is appropriate for the organization" },
+  { key: "checkVoiceContractorAware", label: "Voice follows the selected client’s brand" },
+] as const;
+
+function checksFor(article: Record<string, unknown>) {
+  return article.templateType === "service_detail" || article.template_type === "service_detail"
+    ? SERVICE_DETAIL_MANUAL_CHECKS
+    : MANUAL_CHECKS;
+}
+
 export function manualChecksComplete(article: Record<string, unknown>) {
-  return MANUAL_CHECKS.every(({ key }) => article[key] === true);
+  return checksFor(article).every(({ key }) => article[key] === true);
 }
 
 export function ManualChecklist({
@@ -28,9 +47,10 @@ export function ManualChecklist({
   onSave: (checks: Record<string, boolean | number | null | string>) => void;
   saving: boolean;
 }) {
+  const manualChecks = checksFor(article);
   const [checks, setChecks] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    MANUAL_CHECKS.forEach(({ key }) => {
+    manualChecks.forEach(({ key }) => {
       if (typeof article[key] === "boolean") {
         initial[key] = article[key] as boolean;
       }
@@ -44,7 +64,7 @@ export function ManualChecklist({
     typeof article.reviewNotes === "string" ? article.reviewNotes : "",
   );
 
-  const allChecked = MANUAL_CHECKS.every(({ key }) => checks[key] === true);
+  const allChecked = manualChecks.every(({ key }) => checks[key] === true);
 
   return (
     <section>
@@ -52,7 +72,7 @@ export function ManualChecklist({
         Manual Checks
       </h2>
       <div className="mb-4 flex flex-col gap-2">
-        {MANUAL_CHECKS.map(({ key, label }) => (
+        {manualChecks.map(({ key, label }) => (
           <label key={key} className="flex cursor-pointer items-start gap-2 text-sm">
             <input
               type="checkbox"
@@ -69,7 +89,7 @@ export function ManualChecklist({
 
       <label className="mb-4 block">
         <span className="mb-1 block text-xs font-semibold uppercase text-zinc-500">
-          Score
+          Score (optional)
         </span>
         <input
           type="number"

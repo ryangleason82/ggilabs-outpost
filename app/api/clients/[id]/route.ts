@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { saveClientsConfig } from "@/lib/client-config";
 import { prisma } from "@/lib/prisma";
 
 function cleanText(value: unknown) {
@@ -16,6 +17,8 @@ export async function PATCH(
   const wpUsername = cleanText(body.wpUsername);
   const wpAppPassword = cleanText(body.wpAppPassword);
   const wpResourceRestBase = cleanText(body.wpResourceRestBase) || "resources";
+  const wpServiceDetailRestBase = cleanText(body.wpServiceDetailRestBase) || "service-detail-page";
+  const wpServiceDetailPostType = cleanText(body.wpServiceDetailPostType) || "service-detail-page";
   const gscPropertyUrl = cleanText(body.gscPropertyUrl) || null;
   const gscClientId = cleanText(body.gscClientId) || null;
   const gscClientSecret = cleanText(body.gscClientSecret);
@@ -49,6 +52,8 @@ export async function PATCH(
       wpUsername,
       ...(wpAppPassword ? { wpAppPassword } : {}),
       wpResourceRestBase,
+      wpServiceDetailRestBase,
+      wpServiceDetailPostType,
       gscPropertyUrl,
       gscClientId,
       ...(gscClientSecret ? { gscClientSecret } : {}),
@@ -61,12 +66,15 @@ export async function PATCH(
       wpUrl: true,
       wpUsername: true,
       wpResourceRestBase: true,
+      wpServiceDetailRestBase: true,
+      wpServiceDetailPostType: true,
       gscPropertyUrl: true,
       gscClientId: true,
       isDefault: true,
     },
   });
 
+  await saveClientsConfig();
   return NextResponse.json({ client });
 }
 
@@ -98,5 +106,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Client not found." }, { status: 404 });
   }
 
+  await saveClientsConfig();
   return NextResponse.json({ ok: true });
 }

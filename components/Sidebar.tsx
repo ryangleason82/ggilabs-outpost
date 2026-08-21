@@ -6,9 +6,11 @@ const nav = [
   { label: "Dashboard", href: "/" },
   { label: "Clients", href: "/clients" },
   { label: "Upload CSV", href: "/upload" },
+  { label: "Service Pages", href: "/service-pages" },
   { label: "All Articles", href: "/articles" },
   { label: "Publishing Queue", href: "/queue" },
   { label: "Published Library", href: "/library" },
+  { label: "Prompt Library", href: "/prompts" },
   { label: "How to Use", href: "/how-to" },
 ];
 

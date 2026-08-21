@@ -1,0 +1,17 @@
+{
+  "clients": [
+    {
+      "id": "example-client",
+      "name": "Example Client",
+      "wpUrl": "https://example.com",
+      "wpUsername": "wordpress_username",
+      "wpAppPassword": "wordpress_application_password",
+      "wpResourceRestBase": "resources",
+      "gscPropertyUrl": "https://example.com/",
+      "gscClientId": "",
+      "gscClientSecret": "",
+      "gscRefreshToken": "",
+      "isDefault": true
+    }
+  ]
+}

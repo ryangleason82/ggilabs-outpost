@@ -11,7 +11,7 @@ export default async function QueuePage() {
     selectedClientWhere(),
   ]);
   const articles = await prisma.article.findMany({
-    where: { ...clientWhere, status: "approved" },
+    where: { ...clientWhere, status: { in: ["approved", "wordpress_draft", "scheduled"] } },
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
@@ -19,6 +19,7 @@ export default async function QueuePage() {
       primaryKeyword: true,
       updatedAt: true,
       status: true,
+      scheduledAt: true,
     },
   });
 
@@ -50,7 +51,7 @@ export default async function QueuePage() {
                   {article.postTitle}
                 </Link>
                 <p className="truncate text-xs text-zinc-500">
-                  {article.primaryKeyword} - Approved {formatDate(article.updatedAt)}
+                  {article.primaryKeyword} - {article.status === "scheduled" && article.scheduledAt ? `Scheduled ${formatDate(article.scheduledAt)}` : article.status === "wordpress_draft" ? "Saved as a WordPress draft" : `Approved ${formatDate(article.updatedAt)}`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">

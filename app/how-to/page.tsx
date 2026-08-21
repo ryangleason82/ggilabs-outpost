@@ -23,7 +23,7 @@ const steps = [
   },
   {
     title: "Send the draft to WordPress",
-    body: "From the Publishing Queue, choose Send to WordPress. The Outpost creates a Resources draft, uploads the featured image when present, assigns it to the draft, and stores the WordPress IDs and URLs locally.",
+    body: "From the Publishing Queue, save a WordPress draft, publish immediately, or choose a future local date and time. Outpost uploads the featured image, stores the WordPress IDs and URLs, and lets WordPress handle scheduled publication.",
   },
   {
     title: "Verify the WordPress draft",

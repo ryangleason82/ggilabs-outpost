@@ -3,7 +3,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { getSelectedClient, selectedClientWhere } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
 
-const statuses = ["uploaded", "reviewed", "approved", "published", "flagged"];
+const statuses = ["uploaded", "reviewed", "approved", "wordpress_draft", "scheduled", "published", "flagged"];
 
 type StatusCount = {
   status: string;

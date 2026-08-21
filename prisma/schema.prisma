@@ -14,50 +14,72 @@ model Article {
   clientId String?
   client   Client? @relation(fields: [clientId], references: [id])
 
-  status    String   @default("uploaded")
-  version   Int      @default(1)
+  status    String  @default("uploaded")
+  version   Int     @default(1)
   batchName String?
 
-  publishedAt  DateTime?
-  publishedUrl String?
-  wpPostId     String?
+  publishedAt       DateTime?
+  scheduledAt       DateTime?
+  publishedUrl      String?
+  wpPostId          String?
+  wpPostType        String?
+  wpRestBase        String?
   wpFeaturedMediaId String?
+  wpHeroMediaId String?
+  wpHeroMediaUrl String?
+  wpHeroSourceUrl String?
+  wpSupportingMediaId String?
+  wpSupportingMediaUrl String?
+  wpSupportingSourceUrl String?
 
   featuredImagePath     String?
   featuredImageFilename String?
 
-  postTitle        String
-  postName         String
-  postStatus       String  @default("draft")
-  postType         String  @default("education")
-  templateType     String  @default("spoke")
-  primaryKeyword   String
-  serviceName      String?
-  locationName     String?
-  heroEyebrow      String?
-  heroHeading      String
-  heroSubheading   String
-  introSummary     String
-  section1Heading  String
-  section1Body     String
-  section2Heading  String
-  section2Body     String
-  section3Heading  String
-  section3Body     String
-  faq1Question     String
-  faq1Answer       String
-  faq2Question     String
-  faq2Answer       String
-  faq3Question     String
-  faq3Answer       String
-  ctaHeading       String
-  ctaBody          String
-  ctaButtonText    String
-  ctaButtonUrl     String
-  relatedHubUrl    String
-  relatedHubAnchor String
-  metaTitle        String
-  metaDescription  String
+  postTitle                 String
+  postName                  String
+  postStatus                String    @default("draft")
+  postType                  String    @default("education")
+  templateType              String    @default("spoke")
+  templatePayload           String?
+  promptTemplateId          String?
+  promptVersionId           String?
+  promptCompositionId       String?
+  promptComponentVersionIds String?
+  assembledPromptHash       String?
+  generationModel           String?
+  generationProvider        String?
+  generationTimestamp       DateTime?
+  generatedBy               String?
+  sourceDocumentIds         String?
+  clientProfileVersion      String?
+  generationInputs          String?
+  primaryKeyword            String
+  serviceName               String?
+  locationName              String?
+  heroEyebrow               String?
+  heroHeading               String
+  heroSubheading            String
+  introSummary              String
+  section1Heading           String
+  section1Body              String
+  section2Heading           String
+  section2Body              String
+  section3Heading           String
+  section3Body              String
+  faq1Question              String
+  faq1Answer                String
+  faq2Question              String
+  faq2Answer                String
+  faq3Question              String
+  faq3Answer                String
+  ctaHeading                String
+  ctaBody                   String
+  ctaButtonText             String
+  ctaButtonUrl              String
+  relatedHubUrl             String
+  relatedHubAnchor          String
+  metaTitle                 String
+  metaDescription           String
 
   autoNoEmDashes           Boolean?
   autoExternalLinksPresent Boolean?
@@ -66,57 +88,206 @@ model Article {
   autoKeywordInTitle       Boolean?
   autoNoMarkdownLinks      Boolean?
 
-  checkOpinionInS1         Boolean?
-  checkRealExampleSpecific Boolean?
-  checkAllStatsLinked      Boolean?
+  checkOpinionInS1          Boolean?
+  checkRealExampleSpecific  Boolean?
+  checkAllStatsLinked       Boolean?
   checkExternalLinksCorrect Boolean?
-  checkMetaCapsCorrect     Boolean?
-  checkCtaSpecific         Boolean?
-  checkParagraphLength     Boolean?
-  checkTableRendersCorrect Boolean?
-  checkNoForcedHumor       Boolean?
+  checkMetaCapsCorrect      Boolean?
+  checkCtaSpecific          Boolean?
+  checkParagraphLength      Boolean?
+  checkTableRendersCorrect  Boolean?
+  checkNoForcedHumor        Boolean?
   checkVoiceContractorAware Boolean?
 
   overallScore Int?
   reviewNotes  String?
 
-  gscClicks30d       Int?
-  gscImpressions30d  Int?
-  rankingPosition    Float?
-  gscIndexedStatus    String?
-  gscCoverageState    String?
-  gscLastCrawlTime    DateTime?
-  gscGoogleCanonical  String?
-  gscUserCanonical    String?
-  gscRobotsTxtState   String?
-  gscIndexingState    String?
+  gscClicks30d           Int?
+  gscImpressions30d      Int?
+  rankingPosition        Float?
+  gscIndexedStatus       String?
+  gscCoverageState       String?
+  gscLastCrawlTime       DateTime?
+  gscGoogleCanonical     String?
+  gscUserCanonical       String?
+  gscRobotsTxtState      String?
+  gscIndexingState       String?
   gscInspectionUpdatedAt DateTime?
-  performanceUpdatedAt DateTime?
+  performanceUpdatedAt   DateTime?
 }
 
 model Batch {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  clientId    String?
-  filename    String
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  clientId     String?
+  filename     String
   articleCount Int
-  source      String   @default("csv_upload")
+  source       String   @default("csv_upload")
 }
 
 model Client {
-  id                 String   @id @default(cuid())
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  name               String
-  wpUrl              String
-  wpUsername         String
-  wpAppPassword      String
-  wpResourceRestBase String   @default("resources")
-  gscPropertyUrl     String?
-  gscClientId        String?
-  gscClientSecret    String?
-  gscRefreshToken    String?
-  isDefault          Boolean  @default(false)
+  id                      String   @id @default(cuid())
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  name                    String
+  wpUrl                   String
+  wpUsername              String
+  wpAppPassword           String
+  wpResourceRestBase      String   @default("resources")
+  wpServiceDetailRestBase String   @default("service-detail-page")
+  wpServiceDetailPostType String   @default("service-detail-page")
+  gscPropertyUrl          String?
+  gscClientId             String?
+  gscClientSecret         String?
+  gscRefreshToken         String?
+  isDefault               Boolean  @default(false)
 
-  articles Article[]
+  articles           Article[]
+  promptTemplates    PromptTemplate[]
+  promptCompositions PromptComposition[]
+  siteProfile        SiteProfile?
+  servicePages       ServicePage[]
+}
+
+model SiteProfile {
+  id                String   @id @default(cuid())
+  clientId          String   @unique
+  client            Client   @relation(fields: [clientId], references: [id])
+  businessName      String
+  domain            String
+  brandJson         String
+  templateJson      String
+  internalLinksJson String
+  seoPlugin         String   @default("rank_math")
+  wordpressRestBase String   @default("pages")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model ServicePage {
+  id                    String                @id @default(cuid())
+  clientId              String
+  client                Client                @relation(fields: [clientId], references: [id])
+  pageType              String                @default("service")
+  title                 String
+  slug                  String
+  primaryKeyword        String
+  status                String                @default("generated")
+  currentRevisionId     String?
+  wordpressPostId       String?
+  wordpressUrl          String?
+  wordpressStatus       String?
+  lastPublishedAt       DateTime?
+  lastWordpressModified String?
+  lastPublishedHash     String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  revisions             ServicePageRevision[]
+
+  @@unique([clientId, slug])
+  @@index([clientId])
+  @@index([status])
+}
+
+model ServicePageRevision {
+  id             String      @id @default(cuid())
+  servicePageId  String
+  servicePage    ServicePage @relation(fields: [servicePageId], references: [id], onDelete: Cascade)
+  revisionNumber Int
+  inputsJson     String
+  html           String
+  seoJson        String
+  validationJson String
+  sectionsJson   String
+  createdBy      String      @default("local-operator")
+  source         String      @default("generated")
+  createdAt      DateTime    @default(now())
+
+  @@unique([servicePageId, revisionNumber])
+  @@index([servicePageId])
+}
+
+model PromptTemplate {
+  id                       String                  @id @default(cuid())
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  clientId                 String?
+  client                   Client?                 @relation(fields: [clientId], references: [id])
+  name                     String
+  slug                     String
+  description              String                  @default("")
+  templateType             String
+  industry                 String?
+  scope                    String                  @default("client")
+  status                   String                  @default("draft")
+  currentApprovedVersionId String?
+  createdBy                String                  @default("local-operator")
+  archivedAt               DateTime?
+  lastUsedAt               DateTime?
+  usageCount               Int                     @default(0)
+  importMetadata           String?
+  seedSource               String?
+  seedHash                 String?
+  versions                 PromptVersion[]
+  compositionItems         PromptCompositionItem[]
+
+  @@unique([slug, scope, clientId])
+  @@index([clientId])
+  @@index([templateType])
+  @@index([scope])
+  @@index([status])
+}
+
+model PromptVersion {
+  id               String                  @id @default(cuid())
+  promptTemplateId String
+  promptTemplate   PromptTemplate          @relation(fields: [promptTemplateId], references: [id])
+  versionNumber    Int
+  markdownContent  String
+  changeSummary    String                  @default("")
+  status           String                  @default("draft")
+  contentHash      String
+  createdBy        String                  @default("local-operator")
+  createdAt        DateTime                @default(now())
+  approvedBy       String?
+  approvedAt       DateTime?
+  archivedAt       DateTime?
+  compositionItems PromptCompositionItem[]
+
+  @@unique([promptTemplateId, versionNumber])
+  @@index([promptTemplateId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PromptComposition {
+  id           String                  @id @default(cuid())
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  clientId     String?
+  client       Client?                 @relation(fields: [clientId], references: [id])
+  name         String
+  templateType String
+  status       String                  @default("draft")
+  createdBy    String                  @default("local-operator")
+  items        PromptCompositionItem[]
+
+  @@index([clientId])
+  @@index([templateType])
+}
+
+model PromptCompositionItem {
+  id               String            @id @default(cuid())
+  compositionId    String
+  composition      PromptComposition @relation(fields: [compositionId], references: [id])
+  promptTemplateId String
+  promptTemplate   PromptTemplate    @relation(fields: [promptTemplateId], references: [id])
+  promptVersionId  String
+  promptVersion    PromptVersion     @relation(fields: [promptVersionId], references: [id])
+  position         Int
+  role             String            @default("custom")
+  isRequired       Boolean           @default(true)
+
+  @@unique([compositionId, position])
+  @@index([promptVersionId])
 }

@@ -292,6 +292,135 @@ After a successful send:
 - WordPress URL is saved
 - review notes are updated with the preview URL
 
+## Service Detail Template
+
+Outpost supports the reusable `service_detail` template alongside `spoke`.
+Choose **Service Detail** during CSV upload or include
+`template_type=service_detail` in each row for automatic detection.
+
+Service-detail records use structured JSON as their canonical payload. The
+existing shared Article columns remain populated for lists, search, SEO,
+workflow status, and backward compatibility. Imports default to:
+
+```text
+post_status = draft
+post_type = service
+template_type = service_detail
+```
+
+The importer validates each row independently, reports row and field errors,
+sanitizes HTML-capable fields, and skips duplicate client-scoped slugs without
+changing the existing record. `why_sangiuliano_heading` and
+`why_sangiuliano_body` are accepted only as legacy CSV aliases for the generic
+`trust_heading` and `trust_body` fields.
+
+Allowed HTML includes paragraphs, links, emphasis, lists, tables, table
+sections/cells, and line breaks. Scripts, frames, forms, event handlers, data
+URLs, and JavaScript URLs are rejected. Safe inline table and cell styles are
+preserved.
+
+Publishing converts service-detail payloads into deterministic native
+Gutenberg blocks in the documented section order. The configured client
+WordPress REST base remains the target post type, and Rank Math metadata uses
+the shared SEO integration. Unlike the spoke adapter, service-detail publishing
+does not assume ACF, Kadence, Elementor, reusable pattern IDs, or custom field
+names.
+
+The canonical CSV headers and editor sections are defined in
+`lib/templates.ts`. Required URLs must be absolute HTTPS URLs, meta titles over
+60 characters produce warnings, and meta descriptions over 160 characters are
+rejected.
+
+## Prompt Library
+
+`/prompts` is the database-backed source of truth for writing prompts. Prompt
+Markdown is not hard-coded into UI or publishing code. Each prompt has metadata
+and sequential versions with this lifecycle:
+
+```text
+Draft -> Approved -> Archived
+```
+
+Draft versions can be saved in place. Approved versions are immutable; use
+**Create editable draft** to copy an approved or historical version into the
+next draft. Approval requires a change summary and atomically updates the
+prompt's active approved version. Previous versions remain readable and
+exportable. Archiving prevents new resolution or composition without breaking
+historical Article provenance.
+
+### Prompt scopes
+
+- `global`: reusable across clients.
+- `workspace`: reserved for the current Outpost installation.
+- `industry`: reusable guidance selected by industry.
+- `client`: visible only while its assigned client is selected.
+
+This installation has no accounts, roles, organizations, or workspaces. The
+single local operator has create/edit/approve/archive/import/export/use
+capabilities. APIs still enforce selected-client isolation for client prompts;
+true per-user approval permissions require a future authentication model.
+
+### Import and export
+
+Use **Prompt Library -> Import Markdown** for `.md` files up to 2 MB. Optional
+YAML frontmatter is previewed and may be overridden. Imported approval claims,
+IDs, and client assignments are never trusted; imports always create version 1
+as a draft. Exports use `{slug}-v{version}.md`, normalized frontmatter, and the
+exact stored Markdown body.
+
+### Composition and resolution
+
+Prompt resolution is deterministic: an explicit approved version wins,
+followed by explicit composition, client, industry, workspace, and global
+scope. Multiple matches at one fallback level return a selection error instead
+of choosing silently. Compositions store exact component version IDs in order
+and assemble sections with stable separators and a SHA-256 hash.
+
+Conceptual composition:
+
+```text
+Global template prompt
++ Industry addendum
++ Client instruction prompt
++ Generation inputs
++ Output schema prompt
+```
+
+Client factual knowledge remains separate from prompt instructions. Outpost
+does not currently have client-profile versioning or RAG, so source document
+and client-profile provenance columns are nullable and ready for those systems.
+
+### Content provenance
+
+CSV upload can select an approved prompt version or composition and record:
+
+- exact template/version/composition and component version IDs;
+- assembled prompt hash;
+- generation provider and model;
+- generation/import timestamp and local operator;
+- source filename as generation inputs.
+
+CSV is generated externally today; Outpost does not call a model. Selecting a
+prompt during upload records declared generation provenance but does not claim
+that Outpost performed generation.
+
+### Seed prompts
+
+Repository defaults live under `prompts/global`, `prompts/industries`, and
+optionally `prompts/clients`. Import new seeds idempotently with:
+
+```bash
+npm run prompts:seed
+```
+
+The seed command never overwrites an existing database prompt. Database edits
+remain canonical. Rollback is performed by creating a new draft from a prior
+version and approving it, preserving the audit history.
+
+Rendered Markdown preview is sanitized, raw embedded HTML is escaped, prompt
+content is not logged, imports are size/type checked, exports use database
+slugs rather than filesystem paths, and all prompt APIs are server-scoped.
+
 ## Rank Math SEO
 
 After creating the Resources draft, the app calls:
@@ -389,3 +518,17 @@ public/uploads/
 ## Current Scope
 
 The app is currently built for a single local operator. There is no login system, team workflow, or hosted database. It is intended to run locally, publish drafts to GGILabs WordPress, and keep a local operational record of the article workflow.
+# Service Page HTML Pipeline
+
+Service pages now have a separate review workflow at `/service-pages`. Upload a Content Engine CSV using the documented service-page columns; each row contains a canonical `html_content` WordPress fragment plus dedicated page and Rank Math metadata. Outpost validates the complete batch atomically, creates one review draft per row, detects links/images/sections, and previews the exact HTML. Users can edit HTML, restore revisions, export a correctly quoted CSV, and create or update WordPress pages without filling out a page-writing form.
+
+Publishing defaults to a WordPress draft. Outpost stores the WordPress post ID and updates it on later publishes. Before an update, Outpost compares the remote modified timestamp and content hash; an external WordPress edit returns a conflict instead of being silently overwritten. The selected site profile’s `wordpressRestBase` defaults to `pages`, and Rank Math metadata is written through its REST endpoint.
+
+Run `npm run db:init` after pulling these changes to create the `SiteProfile`, `ServicePage`, and `ServicePageRevision` tables.
+# Service-detail technical SEO publishing
+
+HTML service-detail records are rendered once through the shared service-detail renderer for preview, validation, and WordPress publishing. Published `post_content` contains markup only: saved `<style>` and `<script>` blocks are removed. Install the CSS shown in the Site Profile’s service-detail styling configuration in the WordPress theme or global stylesheet once; the preview injects Outpost’s baseline CSS only inside its sandbox.
+
+Configure the Site Profile with the canonical site URL and a verified provider entity `@id` before enabling Service schema. Outpost will not invent organization facts. Breadcrumb and FAQ schema are derived from their visible page equivalents. The Technical SEO panel blocks publishing on errors and reports non-blocking warnings for optional policy/configuration gaps.
+
+Hero and supporting image URLs must be public HTTPS images with descriptive alt text. On first publish Outpost creates WordPress media attachments and stores their IDs and canonical URLs; later updates reuse those attachments. WordPress supplies intrinsic dimensions and responsive variants when its media response exposes them. A site owner must still ensure the global stylesheet is loaded by the active theme and confirm Rank Math accepts the configured schema meta through its authenticated update endpoint.
