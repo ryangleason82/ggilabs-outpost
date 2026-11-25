@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BookOpen, CircleHelp, Download, FileText, Layers, LayoutDashboard,
+  ArrowUpRight, BookOpen, CircleHelp, Download, FileText, Layers, LayoutDashboard,
   Library, ListChecks, Upload, Users,
 } from "lucide-react";
 import Image from "next/image";
@@ -48,6 +48,16 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <a
+        href="https://ggilabs-seo-operations.ryangleason.chatgpt.site/"
+        target="_blank"
+        rel="noopener"
+        aria-label="SEO Operations (opens in a new tab)"
+        className="outpost-nav-link mx-1 mt-2 shrink-0 justify-between text-sm max-[760px]:self-start"
+      >
+        SEO Operations
+        <ArrowUpRight size={16} aria-hidden="true" />
+      </a>
       <div className="mt-auto pt-3 min-[761px]:pt-5">
         <a href="/api/backup" className="flex items-center gap-2 border-t border-zinc-200 px-3 py-2 text-xs text-zinc-600 hover:text-[var(--accent)]">
           <Download size={14} aria-hidden="true" />
