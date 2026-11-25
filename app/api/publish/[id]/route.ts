@@ -55,7 +55,16 @@ export async function POST(
       }
     }
     const { postId, previewUrl, publishedUrl, featuredMediaId, wordpressPostType, wordpressRestBase, wordpressStatus, action, heroMedia, supportingMedia } =
-      await pushResourceDraftToWordPress(article, article.client, serviceConfig, { status: requestedWordPressStatus, scheduledAt: scheduledAt ?? undefined });
+      await pushResourceDraftToWordPress(article, article.client, serviceConfig, {
+        status: requestedWordPressStatus,
+        scheduledAt: scheduledAt ?? undefined,
+        onResourceDraft: async (postId, restBase) => {
+          await prisma.article.update({
+            where: { id },
+            data: { wpPostId: String(postId), wpPostType: "resource", wpRestBase: restBase, postStatus: "draft", status: "wordpress_draft" },
+          });
+        },
+      });
 
     const localStatus = wordpressStatus === "future" ? "scheduled" : wordpressStatus === "publish" ? "published" : "wordpress_draft";
 
