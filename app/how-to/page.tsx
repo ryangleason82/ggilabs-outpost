@@ -51,7 +51,7 @@ export default function HowToPage() {
             key={step.title}
             className="grid gap-4 border-b border-zinc-100 p-5 last:border-b-0 sm:grid-cols-[3rem_1fr]"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-sm font-semibold text-zinc-700">
               {index + 1}
             </div>
             <div>
@@ -65,7 +65,7 @@ export default function HowToPage() {
       <div className="flex flex-wrap gap-3">
         <Link
           href="/upload"
-          className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+          className="rounded outpost-primary px-4 py-2 text-sm"
         >
           Upload CSV
         </Link>

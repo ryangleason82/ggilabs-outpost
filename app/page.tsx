@@ -47,7 +47,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-8">
-      <div className="mb-8 flex items-center justify-between gap-4">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Dashboard</h1>
           <p className="mt-1 text-sm text-zinc-600">
@@ -58,20 +58,20 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/upload"
-          className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+          className="rounded outpost-primary px-4 py-2 text-sm"
         >
           Upload CSV
         </Link>
       </div>
 
-      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <section className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 min-[1180px]:grid-cols-4 min-[1180px]:gap-4">
         {statuses.map((status) => (
           <Link
             key={status}
             href={`/articles?status=${status}`}
-            className="rounded-lg border border-zinc-200 bg-white p-4 hover:border-zinc-300"
+            className="rounded-lg border border-zinc-200 bg-white p-4 hover:border-zinc-300 md:p-5"
           >
-            <p className="mb-3 text-3xl font-semibold">{countMap[status] ?? 0}</p>
+            <p className="mb-3 text-3xl font-medium tracking-tight tabular-nums xl:text-[38px]">{countMap[status] ?? 0}</p>
             <StatusBadge status={status} />
           </Link>
         ))}

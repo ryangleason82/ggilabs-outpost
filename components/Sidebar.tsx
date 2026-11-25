@@ -1,45 +1,59 @@
+"use client";
+
+import {
+  BookOpen, CircleHelp, Download, FileText, Layers, LayoutDashboard,
+  Library, ListChecks, Upload, Users,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ClientSelector } from "@/components/ClientSelector";
 
 const nav = [
-  { label: "Dashboard", href: "/" },
-  { label: "Clients", href: "/clients" },
-  { label: "Upload CSV", href: "/upload" },
-  { label: "Service Pages", href: "/service-pages" },
-  { label: "All Articles", href: "/articles" },
-  { label: "Publishing Queue", href: "/queue" },
-  { label: "Published Library", href: "/library" },
-  { label: "Prompt Library", href: "/prompts" },
-  { label: "How to Use", href: "/how-to" },
+  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Clients", href: "/clients", icon: Users },
+  { label: "Upload CSV", href: "/upload", icon: Upload },
+  { label: "Service Pages", href: "/service-pages", icon: Layers },
+  { label: "All Articles", href: "/articles", icon: FileText },
+  { label: "Publishing Queue", href: "/queue", icon: ListChecks },
+  { label: "Published Library", href: "/library", icon: Library },
+  { label: "Prompt Library", href: "/prompts", icon: BookOpen },
+  { label: "How to Use", href: "/how-to", icon: CircleHelp },
 ];
 
 export function Sidebar() {
+  const pathname = usePathname();
+
   return (
-    <aside className="flex min-h-screen w-56 shrink-0 flex-col border-r border-zinc-200 bg-zinc-950 p-4 text-white">
-      <Link href="/" className="mb-6 block px-2">
+    <aside className="outpost-sidebar">
+      <Link href="/" className="outpost-brand">
         <Image
-          src="/LightLogoWhiteBg.png"
-          alt="The Outpost"
-          width={168}
-          height={72}
+          src="/darkLogoLightBg.png"
+          alt="The Outpost dashboard"
+          width={220}
+          height={124}
           priority
-          className="h-auto w-full"
         />
       </Link>
       <ClientSelector />
-      <nav className="flex flex-col gap-1">
-        {nav.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="rounded px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white"
-          >
-            {item.label}
-          </Link>
-        ))}
+      <nav aria-label="Outpost" className="flex shrink-0 gap-1 overflow-x-auto p-1 min-[761px]:flex-col min-[761px]:overflow-visible">
+        {nav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || pathname?.startsWith(`${href}/`);
+
+          return (
+            <Link key={href} href={href} aria-current={active ? "page" : undefined} className="outpost-nav-link">
+              <Icon size={16} strokeWidth={1.7} className="shrink-0" aria-hidden="true" />
+              {label}
+            </Link>
+          );
+        })}
       </nav>
-      <a href="/api/backup" className="mt-auto rounded px-3 py-3 text-xs text-zinc-400 hover:text-white">Export records backup</a>
+      <div className="mt-auto pt-3 min-[761px]:pt-5">
+        <a href="/api/backup" className="flex items-center gap-2 border-t border-zinc-200 px-3 py-2 text-xs text-zinc-600 hover:text-[var(--accent)]">
+          <Download size={14} aria-hidden="true" />
+          Export records backup
+        </a>
+      </div>
     </aside>
   );
 }

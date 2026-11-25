@@ -48,7 +48,7 @@ export default async function LibraryPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-8">
-      <div className="mb-8 flex items-start justify-between gap-4">
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Published Library</h1>
           <p className="mt-1 text-sm text-zinc-600">
@@ -63,7 +63,7 @@ export default async function LibraryPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="[--table-width:59rem] outpost-table rounded-lg border border-zinc-200 bg-white">
         <div className="grid grid-cols-[minmax(0,1fr)_180px_80px_100px_90px_110px_80px] gap-4 border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-xs font-semibold uppercase text-zinc-500">
           <span>Title</span>
           <span>Index status</span>

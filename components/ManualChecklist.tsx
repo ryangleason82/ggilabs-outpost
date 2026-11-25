@@ -126,7 +126,7 @@ export function ManualChecklist({
           })
         }
         disabled={saving}
-        className="w-full rounded bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+        className="w-full rounded outpost-primary px-3 py-2 text-sm disabled:opacity-50"
       >
         {saving ? "Saving..." : "Save Checklist"}
       </button>
