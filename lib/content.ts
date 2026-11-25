@@ -1,4 +1,4 @@
-import type { Article } from "@prisma/client";
+import type { Article } from "@/generated/prisma/client";
 import { isHtmlServiceDetail, parseTemplatePayload, type ServiceDetailPayload } from "@/lib/templates";
 
 export function serviceDetailCompatibility(payload: ServiceDetailPayload) {

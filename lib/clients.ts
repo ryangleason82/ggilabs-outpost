@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import type { Client } from "@prisma/client";
+import type { Client } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const SELECTED_CLIENT_COOKIE = "outpost_client_id";

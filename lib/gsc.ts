@@ -1,4 +1,4 @@
-import type { Article, Client } from "@prisma/client";
+import type { Article, Client } from "@/generated/prisma/client";
 
 type GscClientConfig = Pick<
   Client,

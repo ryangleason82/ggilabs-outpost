@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import path from "node:path";
-import type { Article, Client } from "@prisma/client";
+import type { Article, Client } from "@/generated/prisma/client";
 import { serviceDetailFromArticle } from "@/lib/content";
 import { serviceDetailWordPressPayload } from "@/lib/service-detail";
 import type { RenderedImage, ServiceDetailSeoConfig } from "@/lib/service-detail-render";

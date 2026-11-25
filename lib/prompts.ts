@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { Prisma, PromptTemplate, PromptVersion } from "@prisma/client";
+import type { Prisma, PromptTemplate, PromptVersion } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sanitizeHtml } from "@/lib/sanitize";
 
