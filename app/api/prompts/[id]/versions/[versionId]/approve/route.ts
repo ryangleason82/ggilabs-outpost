@@ -1,3 +1,4 @@
+import { database } from "@/lib/atomic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSelectedClientId } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
@@ -10,11 +11,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!summary) return NextResponse.json({ error: "A change summary is required for approval." }, { status: 422 });
   const version = await prisma.promptVersion.findFirst({ where: { id: versionId, promptTemplateId: id }, include: { promptTemplate: true } });
   if (!version || version.status !== "draft" || !canAccessPrompt(version.promptTemplate, clientId)) return NextResponse.json({ error: "Draft not found or unauthorized." }, { status: 404 });
-  const approved = await prisma.$transaction(async (tx) => {
-    await tx.promptVersion.updateMany({ where: { promptTemplateId: id, status: "approved" }, data: { status: "archived", archivedAt: new Date() } });
-    const next = await tx.promptVersion.update({ where: { id: versionId }, data: { status: "approved", changeSummary: summary, approvedBy: "local-operator", approvedAt: new Date(), archivedAt: null } });
-    await tx.promptTemplate.update({ where: { id }, data: { currentApprovedVersionId: versionId, status: "approved", archivedAt: null } });
-    return next;
-  });
+  const db=database(), now=Date.now();
+  await db.batch([
+    db.prepare('UPDATE "PromptVersion" SET status=?, "archivedAt"=? WHERE "promptTemplateId"=? AND status=?').bind('archived',now,id,'approved'),
+    db.prepare('UPDATE "PromptVersion" SET status=?, "changeSummary"=?, "approvedBy"=?, "approvedAt"=?, "archivedAt"=NULL WHERE id=?').bind('approved',summary,'local-operator',now,versionId),
+    db.prepare('UPDATE "PromptTemplate" SET "currentApprovedVersionId"=?, status=?, "archivedAt"=NULL,"updatedAt"=? WHERE id=?').bind(versionId,'approved',now,id)
+  ]);
+  const approved=await prisma.promptVersion.findUniqueOrThrow({where:{id:versionId}});
   return NextResponse.json({ version: approved });
 }

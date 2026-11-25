@@ -1,3 +1,4 @@
+import { createPromptAtomically } from "@/lib/atomic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSelectedClientId } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
@@ -34,15 +35,12 @@ export async function POST(req: NextRequest) {
   const duplicate = await prisma.promptTemplate.findFirst({ where: { slug, scope, clientId: scope === "client" ? clientId : null } });
   if (duplicate) return NextResponse.json({ error: "A prompt with this slug already exists in the selected scope." }, { status: 409 });
   try {
-    const template = await prisma.$transaction(async (tx) => {
-      const created = await tx.promptTemplate.create({ data: {
+    const templateId = await createPromptAtomically({
         name, slug, description: String(body.description ?? ""), templateType: String(body.templateType ?? "spoke"),
         industry: String(body.industry ?? "").trim() || null, scope, clientId: scope === "client" ? clientId : null,
         status: "draft", importMetadata: body.importMetadata ? JSON.stringify(body.importMetadata) : null,
-      }});
-      await tx.promptVersion.create({ data: { promptTemplateId: created.id, versionNumber: 1, markdownContent, changeSummary: String(body.changeSummary ?? "Initial draft"), contentHash: hashPrompt(markdownContent) } });
-      return created;
-    });
+      }, { markdownContent, changeSummary: String(body.changeSummary ?? "Initial draft"), contentHash: hashPrompt(markdownContent) });
+    const template = await prisma.promptTemplate.findUniqueOrThrow({where:{id:templateId}});
     return NextResponse.json({ template }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: "Could not create prompt.", detail: String(error) }, { status: 409 });

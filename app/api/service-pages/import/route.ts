@@ -1,3 +1,4 @@
+import { database, insertStatement } from "@/lib/atomic";
 import { NextResponse } from "next/server";
 import { getSelectedClient } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
@@ -17,13 +18,17 @@ export async function POST(request: Request) {
   }
   const existing = await prisma.servicePage.findMany({ where: { clientId: selectedClient.id, slug: { in: rows.map((row) => row.data.slug) } }, select: { slug: true } });
   if (existing.length) return NextResponse.json({ error: "Duplicate slugs already exist in Outpost. No pages were imported.", issues: existing.map((page) => ({ row: rows.find((row) => row.data.slug === page.slug)?.rowNumber ?? 0, field: "slug", severity: "error", message: `Slug already exists: ${page.slug}` })) }, { status: 409 });
-  const pages = await prisma.$transaction(async (tx) => Promise.all(rows.map(async (row) => {
+  const statements: D1PreparedStatement[] = [];
+  const pageIds:string[]=[];
+  for (const row of rows) {
     const status = row.validation.status === "fail" ? "validation_failed" : row.validation.status === "warning" ? "validation_warning" : "ready_for_review";
     const inputs = { client: row.data.client, pageType: row.data.page_type, pageTitle: row.data.page_title, parent: row.data.parent_slug, serviceName: row.data.service_name, targetLocation: row.data.target_location, primaryKeyword: row.data.primary_keyword, secondaryKeywords: row.secondaryKeywords, featuredImage: row.data.featured_image_url, featuredImageAlt: row.data.featured_image_alt, ctaUrl: row.data.cta_url, importFilename: file.name, detectedInternalLinks: row.internalLinks, detectedImages: row.images };
-    const page = await tx.servicePage.create({ data: { clientId: selectedClient.id, pageType: row.data.page_type, title: row.data.page_title, slug: row.data.slug, primaryKeyword: row.data.primary_keyword, status } });
-    const revision = await tx.servicePageRevision.create({ data: { servicePageId: page.id, revisionNumber: 1, inputsJson: JSON.stringify(inputs), html: row.data.html_content, seoJson: JSON.stringify(row.seo), validationJson: JSON.stringify(row.validation), sectionsJson: JSON.stringify(row.sections), source: "csv_import" } });
-    return tx.servicePage.update({ where: { id: page.id }, data: { currentRevisionId: revision.id } });
-  })));
+    const id=crypto.randomUUID(), revisionId=crypto.randomUUID(),now=Date.now();pageIds.push(id);
+    statements.push(insertStatement('ServicePage',{id,clientId:selectedClient.id,pageType:row.data.page_type,title:row.data.page_title,slug:row.data.slug,primaryKeyword:row.data.primary_keyword,status,currentRevisionId:revisionId,createdAt:now,updatedAt:now}));
+    statements.push(insertStatement('ServicePageRevision',{id:revisionId,servicePageId:id,revisionNumber:1,inputsJson:JSON.stringify(inputs),html:row.data.html_content,seoJson:JSON.stringify(row.seo),validationJson:JSON.stringify(row.validation),sectionsJson:JSON.stringify(row.sections),source:'csv_import',createdBy:'local-operator',createdAt:now}));
+  }
+  await database().batch(statements);
+  const pages=await prisma.servicePage.findMany({where:{id:{in:pageIds}}});
   const counts = { imported: pages.length, ready: pages.filter((page) => page.status === "ready_for_review").length, warnings: pages.filter((page) => page.status === "validation_warning").length, failed: pages.filter((page) => page.status === "validation_failed").length };
   return NextResponse.json({ pages, counts, issues: issues.filter((issue) => issue.severity === "warning") }, { status: 201 });
 }

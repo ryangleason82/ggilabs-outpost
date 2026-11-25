@@ -1,3 +1,4 @@
+import { createPromptAtomically } from "@/lib/atomic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSelectedClientId } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
@@ -17,11 +18,8 @@ export async function POST(req: NextRequest) {
   const duplicate = await prisma.promptTemplate.findFirst({ where: { slug, scope, clientId: scope === "client" ? clientId : null } });
   if (duplicate) return NextResponse.json({ error: "A prompt with this slug already exists in the selected scope." }, { status: 409 });
   try {
-    const template = await prisma.$transaction(async (tx) => {
-      const created = await tx.promptTemplate.create({ data: { name, slug, description: String(form.get("description") || parsed.metadata.description || ""), templateType: String(form.get("templateType") || parsed.metadata.template_type || "spoke"), industry: String(form.get("industry") || parsed.metadata.industry || "") || null, scope, clientId: scope === "client" ? clientId : null, importMetadata: JSON.stringify(parsed.metadata) } });
-      await tx.promptVersion.create({ data: { promptTemplateId: created.id, versionNumber: 1, markdownContent: parsed.markdown, changeSummary: "Imported Markdown", contentHash: hashPrompt(parsed.markdown) } });
-      return created;
-    });
+    const templateId = await createPromptAtomically({ name, slug, description: String(form.get("description") || parsed.metadata.description || ""), templateType: String(form.get("templateType") || parsed.metadata.template_type || "spoke"), industry: String(form.get("industry") || parsed.metadata.industry || "") || null, scope, clientId: scope === "client" ? clientId : null, importMetadata: JSON.stringify(parsed.metadata) }, { markdownContent: parsed.markdown, changeSummary: "Imported Markdown", contentHash: hashPrompt(parsed.markdown) });
+    const template = await prisma.promptTemplate.findUniqueOrThrow({where:{id:templateId}});
     return NextResponse.json({ template }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: "Import failed.", detail: String(error) }, { status: 409 }); }
 }

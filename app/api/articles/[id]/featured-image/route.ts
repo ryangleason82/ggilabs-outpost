@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { env } from "cloudflare:workers";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
@@ -45,13 +45,10 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadDir, { recursive: true });
-
   const filename = `${randomUUID()}.${extension}`;
   const imagePath = `/uploads/${filename}`;
   const bytes = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, filename), bytes);
+  await (env as unknown as {BUCKET:R2Bucket}).BUCKET.put(`uploads/${filename}`, bytes, {httpMetadata:{contentType:file.type}});
 
   const updated = await prisma.article.update({
     where: { id },

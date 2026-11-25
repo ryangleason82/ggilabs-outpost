@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "The Outpost",
-  description: "Local CSV review and WordPress publishing workflow.",
+  description: "Private GGILabs content review, prompt library, and WordPress publishing.",
 };
 
 export default function RootLayout({

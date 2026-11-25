@@ -1,6 +1,6 @@
-import { readFile } from "node:fs/promises";
+import { env } from "cloudflare:workers";
 import path from "node:path";
-import type { Article, Client } from "@prisma/client";
+import type { Article, Client } from "@/generated/prisma/client";
 import { serviceDetailFromArticle } from "@/lib/content";
 import { serviceDetailWordPressPayload } from "@/lib/service-detail";
 import type { RenderedImage, ServiceDetailSeoConfig } from "@/lib/service-detail-render";
@@ -392,12 +392,10 @@ async function uploadFeaturedImage(article: Article, client: WordPressClientConf
     return null;
   }
 
-  const localPath = path.join(
-    process.cwd(),
-    "public",
-    article.featuredImagePath.replace(/^\//, ""),
-  );
-  const bytes = await readFile(localPath);
+  const localPath = article.featuredImagePath;
+  const object = await (env as unknown as {BUCKET:R2Bucket}).BUCKET.get(localPath.replace(/^\//, ""));
+  if (!object) throw new Error("Featured image missing from hosted storage.");
+  const bytes = await object.arrayBuffer();
   const filename = featuredImageMetadata(article, path.extname(localPath).toLowerCase()).filename;
 
   const res = await fetch(wpApiEndpoint(client, "media"), {

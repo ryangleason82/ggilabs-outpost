@@ -39,6 +39,7 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
+      <a href="/api/backup" className="mt-auto rounded px-3 py-3 text-xs text-zinc-400 hover:text-white">Export records backup</a>
     </aside>
   );
 }

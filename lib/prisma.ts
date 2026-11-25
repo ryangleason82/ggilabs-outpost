@@ -1,20 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-
-const databaseUrl = process.env.DATABASE_URL ?? "file:./dev.db";
-const adapter = new PrismaBetterSqlite3({ url: databaseUrl });
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaD1 } from "@prisma/adapter-d1";
+import { env } from "cloudflare:workers";
+export const prisma = new PrismaClient({ adapter: new PrismaD1((env as unknown as {DB:D1Database}).DB), log:["error"] });
