@@ -1,5 +1,5 @@
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { configureToolEnvironment } from "./scripts/tool-environment.mjs";
@@ -56,6 +56,29 @@ export default defineConfig(async ({ command }) => {
     },
     plugins: [
       vinext(),
+      {
+        name: "outpost-vinext-link-navigation",
+        enforce: "pre",
+        transform(code, id) {
+          if (
+            this.environment.name !== "client" ||
+            !id.replaceAll("\\", "/").endsWith("/vinext/dist/shims/link.js")
+          ) {
+            return;
+          }
+
+          // Rolldown folds navigation into the browser entry and renames its
+          // exports. A static namespace import lets it resolve the names
+          // that Vinext's Link shim reads for navigation and prefetching.
+          const navigationImport = 'import("./navigation.js")';
+          if (!code.includes(navigationImport)) {
+            this.error("The Vinext Link navigation import changed. Recheck this workaround.");
+          }
+          return code
+            .replace('"use client";', '"use client";\nimport * as linkNavigation from "./navigation.js";')
+            .replace(navigationImport, "Promise.resolve(linkNavigation)");
+        },
+      } satisfies Plugin,
       sites({ mockAuth: !managedLinux }),
       connectorPreview(),
       cloudflare({
