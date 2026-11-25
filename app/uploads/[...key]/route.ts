@@ -1,0 +1,2 @@
+import {env} from "cloudflare:workers";
+export async function GET(request:Request,{params}:{params:Promise<{key:string[]}>}){ const {key}=await params; if(key.some(k=>k==='..'))return new Response(null,{status:400}); const object=await (env as unknown as {BUCKET:R2Bucket}).BUCKET.get('uploads/'+key.join('/')); if(!object)return new Response(null,{status:404});const headers=new Headers();object.writeHttpMetadata(headers);headers.set('Cache-Control','private, max-age=3600');headers.set('ETag',object.httpEtag);return new Response(object.body,{headers});}
