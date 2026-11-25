@@ -326,7 +326,26 @@ async function writeAndVerifyCustomFields(
   postId: number,
   fields: ResourceFields,
   client: WordPressClientConfig,
+  restBase: string,
 ) {
+  const endpoint = resourceEndpoint(client, restBase, `/${postId}`);
+  const headers = { Authorization: authHeader(client), "Content-Type": "application/json", "Cache-Control": "no-cache" };
+  const read = async () => {
+    const response = await fetch(`${endpoint}?context=edit&_fields=acf`, { headers });
+    if (!response.ok) throw new Error(`Could not read Resource fields (HTTP ${response.status}).`);
+    return (await response.json() as { acf?: Record<string, unknown> }).acf;
+  };
+  const exposed = await read();
+  const expected = Object.fromEntries(Object.entries(fields).filter(([key]) => key !== "meta_title" && key !== "meta_description"));
+  if (exposed && Object.keys(expected).every((key) => Object.hasOwn(exposed, key))) {
+    const response = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify({ acf: expected }) });
+    if (!response.ok) throw new Error(`WordPress REST Resource field update failed (HTTP ${response.status}): ${await response.text()}`);
+    const saved = await read();
+    const mismatches = Object.entries(expected).filter(([key, value]) => String(saved?.[key] ?? "") !== value);
+    if (mismatches.length) throw new Error(`WordPress did not persist Resource fields: ${mismatches.map(([key]) => key).join(", ")}`);
+    return;
+  }
+
   const authParams = [
     "<value><int>1</int></value>",
     xmlString(client.wpUsername),
@@ -462,7 +481,7 @@ export async function repairResourceMetadataInWordPress(
   postId: number,
 ) {
   if (!Number.isFinite(postId)) throw new Error("Invalid WordPress post ID.");
-  await writeAndVerifyCustomFields(postId, resourceFields(article), client);
+  await writeAndVerifyCustomFields(postId, resourceFields(article), client, await resolveResourceRestBase(client));
   await updateRankMathMeta(postId, article, client);
 }
 
@@ -470,7 +489,7 @@ export async function pushResourceDraftToWordPress(
   article: Article,
   client: WordPressClientConfig,
   serviceConfig: ServiceDetailSeoConfig = {},
-  publishOptions: { status?: "draft" | "publish" | "future"; scheduledAt?: Date } = {},
+  publishOptions: { status?: "draft" | "publish" | "future"; scheduledAt?: Date; onResourceDraft?: (postId: number, restBase: string) => Promise<void> } = {},
 ): Promise<{
   postId: number;
   previewUrl: string;
@@ -515,6 +534,7 @@ export async function pushResourceDraftToWordPress(
   if (wordpressStatus === "future" && (!publishOptions.scheduledAt || publishOptions.scheduledAt.getTime() <= Date.now())) {
     throw new Error("A future WordPress post requires a scheduled time later than now.");
   }
+  const stagedResource = !!mappedFields && (!existingPostId || preservedStatus === "draft") && wordpressStatus !== "draft";
   const res = await fetch(resourceEndpoint(client, target.restBase, existingPostId ? `/${existingPostId}` : ""), {
     method: "POST",
     headers: {
@@ -524,8 +544,8 @@ export async function pushResourceDraftToWordPress(
     body: JSON.stringify({
       title: serviceDetail?.title ?? article.postTitle,
       slug: serviceDetail?.slug ?? article.postName,
-      status: wordpressStatus,
-      ...(wordpressStatus === "future" && publishOptions.scheduledAt ? { date_gmt: publishOptions.scheduledAt.toISOString() } : {}),
+      status: stagedResource ? "draft" : wordpressStatus,
+      ...(!stagedResource && wordpressStatus === "future" && publishOptions.scheduledAt ? { date_gmt: publishOptions.scheduledAt.toISOString() } : {}),
       content: serviceDetail?.content ?? articleContent(article),
       meta: rankMathMeta(article),
       ...(featuredMediaId ? { featured_media: featuredMediaId } : {}),
@@ -552,7 +572,10 @@ export async function pushResourceDraftToWordPress(
     throw new Error("WordPress did not return a valid resource ID.");
   }
 
-  if (mappedFields) await writeAndVerifyCustomFields(postId, mappedFields, client);
+  if (mappedFields) {
+    if (!existingPostId) await publishOptions.onResourceDraft?.(postId, target.restBase);
+    await writeAndVerifyCustomFields(postId, mappedFields, client, target.restBase);
+  }
 
   const returnedPermalink = typeof post.link === "string" ? post.link : currentPermalink;
   let authoritativePermalink = returnedPermalink;
@@ -578,6 +601,20 @@ export async function pushResourceDraftToWordPress(
   }
 
   await updateRankMathMeta(postId, article, client, serviceDetail?.rendered ? { canonicalUrl: authoritativePermalink || undefined } : undefined);
+
+  if (stagedResource) {
+    const response = await fetch(resourceEndpoint(client, target.restBase, `/${postId}`), {
+      method: "POST",
+      headers: { Authorization: authHeader(client), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: wordpressStatus,
+        ...(wordpressStatus === "future" && publishOptions.scheduledAt ? { date_gmt: publishOptions.scheduledAt.toISOString() } : {}),
+      }),
+    });
+    if (!response.ok) throw new Error(`WordPress could not finalize Resource draft #${postId} (HTTP ${response.status}).`);
+    post = await response.json() as Record<string, unknown>;
+    authoritativePermalink = typeof post.link === "string" ? post.link : authoritativePermalink;
+  }
 
   return {
     postId,
