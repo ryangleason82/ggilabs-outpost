@@ -14,7 +14,7 @@ import {
 } from "@/components/ManualChecklist";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TechnicalSeoPanel } from "@/components/TechnicalSeoPanel";
-import { CSV_HEADERS } from "@/lib/parser";
+import { CSV_HEADERS } from "@/lib/article-csv-headers";
 import { SERVICE_DETAIL_EDIT_GROUPS, SERVICE_DETAIL_FIELDS, SERVICE_DETAIL_HTML_EDIT_GROUPS, SERVICE_DETAIL_HTML_FIELDS } from "@/lib/templates";
 import { expectedServicePath, SERVICE_HUB_OPTIONS } from "@/lib/service-hubs";
 

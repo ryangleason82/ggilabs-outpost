@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { selectedClientWhere } from "@/lib/clients";
 import { prisma } from "@/lib/prisma";
 import { runAutoChecks } from "@/lib/checker";
-import { CSV_HEADERS } from "@/lib/parser";
+import { CSV_HEADERS } from "@/lib/article-csv-headers";
 import { SERVICE_DETAIL_FIELDS, type ServiceDetailPayload } from "@/lib/templates";
 import { articleForApi, serviceDetailCompatibility, serviceDetailFromArticle } from "@/lib/content";
 import { validateServiceDetail } from "@/lib/validation";
