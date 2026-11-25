@@ -56,7 +56,7 @@ export function PublishArticleButton({ articleId }: { articleId: string }) {
         type="button"
         disabled={publishing}
         onClick={() => void publish()}
-        className="rounded bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+        className="rounded outpost-primary px-3 py-2 text-sm disabled:opacity-50"
       >
         {publishing ? "Sending..." : mode === "publish" ? "Publish now" : mode === "schedule" ? "Schedule in WordPress" : "Save WordPress draft"}
       </button>

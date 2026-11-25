@@ -36,10 +36,10 @@ export function ClientSelector() {
   }
 
   return (
-    <div className="mb-5 px-2">
+    <div className="mb-3 max-w-xs px-1 min-[761px]:mb-5">
       <label
         htmlFor="client-selector"
-        className="mb-1 block text-xs font-semibold uppercase text-zinc-500"
+        className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600"
       >
         Client
       </label>
@@ -48,7 +48,7 @@ export function ClientSelector() {
         value={selectedClientId}
         disabled={loading || clients.length === 0}
         onChange={(event) => void selectClient(event.target.value)}
-        className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-white outline-none hover:border-zinc-500"
+        className="w-full rounded-[10px] border border-zinc-300 bg-white px-2.5 py-2 text-sm text-zinc-950 hover:border-zinc-500 disabled:opacity-60"
       >
         {clients.length === 0 ? (
           <option value="">No clients</option>

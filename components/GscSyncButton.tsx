@@ -41,7 +41,7 @@ export function GscSyncButton({ articleId, compact = false }: GscSyncButtonProps
         className={
           compact
             ? "rounded border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium hover:bg-zinc-50 disabled:opacity-50"
-            : "rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+            : "rounded outpost-primary px-4 py-2 text-sm disabled:opacity-50"
         }
       >
         {syncing ? "Syncing..." : articleId ? "Sync" : "Sync GSC"}

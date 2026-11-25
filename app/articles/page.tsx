@@ -40,7 +40,7 @@ export default async function ArticlesPage({
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-8">
-      <div className="mb-8 flex items-center justify-between gap-4">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">All Articles</h1>
           <p className="mt-1 text-sm text-zinc-600">
@@ -51,7 +51,7 @@ export default async function ArticlesPage({
         </div>
         <Link
           href="/upload"
-          className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+          className="rounded outpost-primary px-4 py-2 text-sm"
         >
           Upload CSV
         </Link>
@@ -61,7 +61,7 @@ export default async function ArticlesPage({
         {Object.values(TEMPLATE_REGISTRY).map((item) => <Link key={item.value} href={`/articles?template=${item.value}${status ? `&status=${status}` : ""}`} className="rounded border border-zinc-300 px-3 py-1.5">{item.label}</Link>)}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="outpost-table rounded-lg border border-zinc-200 bg-white">
         <div className="grid grid-cols-[1fr_160px_120px_120px_80px] gap-4 border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-xs font-semibold uppercase text-zinc-500">
           <span>Title</span>
           <span>Keyword</span>

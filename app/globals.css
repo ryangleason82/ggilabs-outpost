@@ -1,21 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f5ef;
+  --foreground: #292722;
+  --sidebar: #efece3;
+  --sidebar-foreground: #706a60;
+  --sidebar-hover: #e5e0d5;
+  --accent: #a9322d;
+  --accent-hover: #911f1c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter), "Segoe UI", Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+@theme {
+  --color-zinc-50: #fcfbf8;
+  --color-zinc-100: #f1ede4;
+  --color-zinc-200: #e8e3d9;
+  --color-zinc-300: #d9cfb9;
+  --color-zinc-500: #756f65;
+  --color-zinc-600: #696146;
+  --color-zinc-700: #514a36;
+  --color-zinc-800: #3d372e;
+  --color-zinc-950: #292722;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.125rem;
+}
+
+@layer base {
+  *, ::before, ::after, ::file-selector-button {
+    border-color: var(--color-zinc-200);
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  input[type="checkbox"], input[type="radio"] {
+    accent-color: var(--accent);
+  }
 }
 
 button,
@@ -28,6 +64,142 @@ select {
     border-color 120ms ease,
     color 120ms ease,
     opacity 120ms ease;
+}
+
+@utility outpost-primary {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+}
+
+.outpost-shell {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.outpost-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow-y: auto;
+  padding: 24px 16px;
+  background: var(--sidebar);
+  border-right: 1px solid var(--color-zinc-200);
+}
+
+.outpost-brand {
+  display: grid;
+  width: 142px;
+  height: 89px;
+  flex-shrink: 0;
+  place-content: center;
+  margin: 0 0 20px 4px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.outpost-brand img {
+  width: 220px;
+  max-width: none;
+  height: auto;
+}
+
+.outpost-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  color: var(--sidebar-foreground);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.outpost-nav-link:hover {
+  background: var(--sidebar-hover);
+  color: var(--foreground);
+}
+
+.outpost-nav-link[aria-current="page"] {
+  background: white;
+  color: var(--accent);
+  box-shadow: 0 3px 14px #29272206;
+}
+
+.outpost-main > div:is(.p-8, .px-8) {
+  padding-inline: clamp(18px, 3.35vw, 48px);
+}
+
+.outpost-main h1:not(article *) {
+  font-family: var(--font-lora), Georgia, serif;
+  font-size: clamp(1.75rem, 3.2vw, 2.625rem);
+  font-weight: 500;
+  letter-spacing: -0.038em;
+  line-height: 1.15;
+}
+
+.outpost-main h2:not(article *, .uppercase) {
+  font-family: var(--font-lora), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.outpost-main :is(a, button, input, select, textarea).rounded:not(article *) {
+  border-radius: 10px;
+}
+
+.outpost-main :is(.rounded-lg, .rounded-xl).border.bg-white:not(article *) {
+  box-shadow: 0 5px 20px #29272203;
+}
+
+.outpost-table {
+  overflow-x: auto;
+}
+
+.outpost-table > .grid {
+  min-width: var(--table-width, 44rem);
+}
+
+@media (max-width: 760px) {
+  .outpost-shell {
+    display: block;
+  }
+
+  .outpost-sidebar {
+    position: relative;
+    height: auto;
+    padding: 12px 18px;
+    overflow: visible;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-zinc-200);
+  }
+
+  .outpost-brand {
+    width: 108px;
+    height: 61px;
+    margin: 0 0 8px;
+  }
+
+  .outpost-brand img {
+    width: 157px;
+  }
+
+  .outpost-nav-link {
+    padding: 9px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button, a, input, textarea, select {
+    transition: none;
+  }
 }
 
 .article-body {

@@ -182,7 +182,7 @@ export function ClientManager() {
                 <button
                   type="button"
                   onClick={() => editClient(client)}
-                  className="rounded bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700"
+                  className="rounded outpost-primary px-3 py-1.5 text-sm"
                 >
                   Edit
                 </button>
@@ -346,7 +346,7 @@ export function ClientManager() {
             type="button"
             disabled={saving}
             onClick={() => void saveClient()}
-            className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+            className="rounded outpost-primary px-4 py-2 text-sm disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save Client"}
           </button>

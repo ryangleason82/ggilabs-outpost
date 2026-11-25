@@ -167,7 +167,7 @@ export default function UploadPage() {
             ))}
           </div>
           {result.preview && pendingFile && <div className="mt-4 flex flex-wrap gap-3">
-            <button type="button" disabled={uploading || result.count === 0} onClick={() => void uploadFile(pendingFile, "import", "skip")} className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{uploading ? "Importing..." : `Skip existing and import ${result.count} new`}</button>
+            <button type="button" disabled={uploading || result.count === 0} onClick={() => void uploadFile(pendingFile, "import", "skip")} className="rounded outpost-primary px-4 py-2 text-sm disabled:opacity-50">{uploading ? "Importing..." : `Skip existing and import ${result.count} new`}</button>
             {result.skipped.length > 0 && <button type="button" disabled={uploading || result.count + result.skipped.length === 0} onClick={() => void uploadFile(pendingFile, "import", "overwrite")} className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:opacity-50">{uploading ? "Importing..." : `Overwrite ${result.skipped.length} existing${result.count ? ` and import ${result.count} new` : ""}`}</button>}
           </div>}
           <button
