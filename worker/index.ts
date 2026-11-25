@@ -4,6 +4,11 @@ import type { ConnectorBinding } from "../lib/connector-contract.mjs";
 
 const worker = {
   fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
+    const path = new URL(request.url).pathname;
+    if (!import.meta.env.DEV && !request.headers.get("oai-authenticated-user-id") &&
+        !(request.method === "GET" && path === "/api/deployment") && path !== "/mcp") {
+      return new Response("A signed-in user is required.", { status: 403 });
+    }
     let binding = ctx.props?.CONNECTORS;
     // Local preview emulates the same request-scoped capability. This branch and
     // the auxiliary service binding are absent from production builds.
