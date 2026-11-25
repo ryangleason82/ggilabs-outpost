@@ -1,5 +1,5 @@
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { configureToolEnvironment } from "./scripts/tool-environment.mjs";
@@ -78,7 +78,7 @@ export default defineConfig(async ({ command }) => {
             .replace('"use client";', '"use client";\nimport * as linkNavigation from "./navigation.js";')
             .replace(navigationImport, "Promise.resolve(linkNavigation)");
         },
-      },
+      } satisfies Plugin,
       sites({ mockAuth: !managedLinux }),
       connectorPreview(),
       cloudflare({
